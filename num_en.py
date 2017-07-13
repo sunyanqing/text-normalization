@@ -20,12 +20,12 @@ class NumEn(num_base.NumBase):
 
     def ordinals(self,str):
         if re.search("^\d*(1st|2nd|3rd|[4567890]th|11th|12th|13th)$",str):
-            return self.numword.ordinal(self.get_canonical_number_from_string(re.sub('\D','',str)))
+            return self.num2words.to_ordinal(self.get_canonical_number_from_string(re.sub('\D','',str)))
         else: return False
 
     def percentage(self,number,power=0):
         percent = ["percent","per mille","basis point"]
-        return self.numword.cardinal(number) + " " + percent[power]
+        return self.num2words.to_cardinal(number) + " " + percent[power]
 
     def other(self,str):
         if str == "24/7": return "twenty-four seven"
@@ -39,11 +39,11 @@ class NumEn(num_base.NumBase):
         return str
 
     def complex_endings(self,str,number):
-        return unicode(self.numword.cardinal(number))+re.sub("\d","",str)
+        return unicode(self.num2words.to_cardinal(number))+re.sub("\d","",str)
 
     def temperature(self,number):
         #print "@2"
-        return self.numword._split(number,self.degree,split_precision=0)
+        return self.num2words.to_splitnum(number,self.degree,divisor=1)
 
     def is_date_near(self,details):
         if set(self.months) & (set(details['left']) | set(details['right'])): return True

@@ -2,19 +2,21 @@
 __author__ = 'soshial'
 
 import re
+from num2words import *
 
 class NumBase(object):
     language = None
 
     def __init__(self,language,logger):
         self.language = language
-        # setting right numword classes
-        if language == 'de': from numword import numword_de; self.numword = numword_de.NumWordDE()
-        elif language == 'en': from numword import numword_en; self.numword = numword_en.NumWordEN()
-        elif language == 'es': from numword import numword_es; self.numword = numword_es.NumWordES()
-        elif language == 'fr': from numword import numword_fr; self.numword = numword_fr.NumWordFR()
-        elif language == 'ru': from numword import numword_ru; self.numword = numword_ru.NumWordRU()
-        else: from numword import numword_en as numword
+        # setting right num2words classes
+        # We try the full language first
+        if language not in CONVERTER_CLASSES:
+            # ... and then try only the first 2 letters
+            language = language[:2]
+        if language not in CONVERTER_CLASSES:
+            raise NotImplementedError()
+        self.num2words = CONVERTER_CLASSES[language]
 
         self.logger = logger
         self.decades = {}
@@ -70,18 +72,18 @@ class NumBase(object):
 #            else: self.numword.inflection_case = u"им"
             #print self.numword.inflection_case
         if re.search("^\d+$",str): # simplest natural number
-            if 1800 < canonical_number < 2000: return self.numword.year(canonical_number) # a year
+            if 1800 < canonical_number < 2000: return self.num2words.to_year(canonical_number) # a year
             elif type == "ord" or self.is_date_near(details):
-                return self.numword.ordinal(canonical_number) # the 1 of March -> the first of March
-            else: return self.numword.cardinal(canonical_number) # usual number
+                return self.num2words.to_ordinal(canonical_number) # the 1 of March -> the first of March
+            else: return self.num2words.to_cardinal(canonical_number) # usual number
         elif re.search("^-?\d+(\.|,)?\d*$",str):
-            return self.numword.cardinal(canonical_number) # usual number
+            return self.num2words.to_cardinal(canonical_number) # usual number
         elif re.search("^\d{4}-\d{2,4}$",str): # "1982-(19)95" -> "from 1982 to 1995"
             def daterepl(matchobj):
                 try:
                     self.from_to.split("/")
-                    return self.from_to.split("/")[0] + " " + self.numword.cardinal(self.get_canonical_number_from_string(matchobj.group(1)))\
-                           + " " + self.from_to.split("/")[1] + " " + self.numword.cardinal(self.get_canonical_number_from_string(matchobj.group(2)))
+                    return self.from_to.split("/")[0] + " " + self.num2words.to_cardinal(self.get_canonical_number_from_string(matchobj.group(1)))\
+                           + " " + self.from_to.split("/")[1] + " " + self.num2words.to_cardinal(self.get_canonical_number_from_string(matchobj.group(2)))
                 except StandardError:
                     self.logger.info('Problem with processing type of 2 variables (e.g. 1763-98): ' + str)
                     raise StandardError
@@ -98,25 +100,25 @@ class NumBase(object):
             #print "#3"
             return self.decades[str]
         elif re.search(u"^[#№]\d+$",str):
-            return self.number+" "+self.numword.cardinal(canonical_number)
+            return self.number+" "+self.num2words.to_cardinal(canonical_number)
         elif re.search("^[$¢€£]-?\d+(\.|,)?\d*$",str): # currencies
-            return self.numword.currency(canonical_number)
+            return self.num2words.to_currency(canonical_number)
         elif re.search("^[IVXLCM]{2,}$",str): # roman numerals
             #print "#4"
-            return self.numword.cardinal(self.roman_to_int(str))
+            return self.num2words.to_cardinal(self.roman_to_int(str))
         elif re.search(u"^-?\d+(°|°?C|°?F)$",str): # temperature
             return self.temperature(long(re.sub("[^\d-]","",str)))
         elif re.search("^-?\d+(\.|,)?\d*.$",str):
             #print "#5"
-            if str.endswith(u"k"): return self.numword.cardinal(canonical_number*1000)
-            elif str.endswith(u"m"): return self.numword.cardinal(canonical_number*1000000)
+            if str.endswith(u"k"): return self.num2words.to_cardinal(canonical_number*1000)
+            elif str.endswith(u"m"): return self.num2words.to_cardinal(canonical_number*1000000)
             # todo if "60s".endswith(u"s"): 60 seconds or sixties
             elif str.endswith(u"%"): return self.percentage(canonical_number)
             elif str.endswith(u"‰"): return self.percentage(canonical_number,1)
             elif str.endswith(u"‱"): return self.percentage(canonical_number,2)
-            elif str.endswith(u"+"): return self.plus.split("/")[0] + " " + self.numword.cardinal(canonical_number) + " " + self.plus.split("/")[1]
-            elif str.endswith(u"x"): return self.numword.cardinal(canonical_number) + u" times"
-            else: return self.numword.cardinal(canonical_number) # should return self.numword.cardinal(self.short_endings(str))
+            elif str.endswith(u"+"): return self.plus.split("/")[0] + " " + self.num2words.to_cardinal(canonical_number) + " " + self.plus.split("/")[1]
+            elif str.endswith(u"x"): return self.num2words.to_cardinal(canonical_number) + u" times"
+            else: return self.num2words.to_cardinal(canonical_number) # should return self.num2words.to_cardinal(self.short_endings(str))
         elif not self.ordinals(str) is False: # 21st, 9th, 1092nd
             #print "#6"
             return self.ordinals(str)
@@ -128,10 +130,10 @@ class NumBase(object):
             #print "#8"
             print u"WARNING!!!_with", str
             self.logger.info("WARNING!!!_with", str + clean_number_string)
-            return self.numword.cardinal(canonical_number)
+            return self.num2words.to_cardinal(canonical_number)
         else:
             #print "#9"
-            return re.sub("[\d.-]+",self.numword.cardinal(canonical_number),clean_number_string)
+            return re.sub("[\d.-]+",self.num2words.to_cardinal(canonical_number),clean_number_string)
 
     def int_to_roman(self,i):
         result = []

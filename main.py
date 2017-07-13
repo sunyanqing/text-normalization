@@ -19,7 +19,7 @@ def dictionary_check(word):
     word = unicode(word)
     if word.upper() in dictionary:
         return spelling_variant_check([word])
-    clean_word = regex.sub("[^\w'.-]","",word).upper() # just cleant word only with apostrophies, hyphens and dots
+    clean_word = re.sub("[^\w'.-]","",word).upper() # just cleant word only with apostrophies, hyphens and dots
 
     # checking acronyms like "U.S.A."
     if len(word)>2 and ".".join(list(word)) in dictionary: return ".".join(list(word))
@@ -27,8 +27,8 @@ def dictionary_check(word):
     if len(word)<5 and not word in dictionary and word+"." in dictionary: return word+"."
     # checking and splitting hyphenized words like "out-of-order"
     dehyphenized_set = set(clean_word.split("-"))
-    if len(dehyphenized_set) == len(dehyphenized_set & dictionary): return regex.sub("-"," ",word) # 'out-of-order' -> 'out of order'
-    variants = {clean_word, regex.sub("-","",word).upper()} # the set of all variants of the word
+    if len(dehyphenized_set) == len(dehyphenized_set & dictionary): return re.sub("-"," ",word) # 'out-of-order' -> 'out of order'
+    variants = {clean_word, re.sub("-","",word).upper()} # the set of all variants of the word
     # generating all possible variants; not applicable, imho
     # for example, for the word "file" @variants would be: set(['FIL-E', 'FIL E', 'FI-LE', 'FI LE', 'FILE', 'F-ILE', 'F ILE'])
 #    i = 1
@@ -183,7 +183,7 @@ do_logging = True
 import ConfigParser
 config = ConfigParser.RawConfigParser()
 config.read('normalization.cfg')
-import re,regex
+import re
 
 # initializing logging
 import logging
@@ -229,9 +229,9 @@ while True:
                 if re.search(u"[/|]",sentence_in): omit = True
                 # omitting the part of phrase that is considered as play/transcripts characters (MICHELE: ...)
                 # has : AND start is all upper OR is title AND first character after : is big
-                if regex.search(":",sentence_in) and (sentence_in.split(':')[0].isupper() or sentence_in.split(':')[0].istitle()) and sentence_in.split(':')[1].strip()[0].isupper():
+                if re.search(":",sentence_in) and (sentence_in.split(':')[0].isupper() or sentence_in.split(':')[0].istitle()) and sentence_in.split(':')[1].strip()[0].isupper():
                     sentence_in = ':'.join(sentence_in.split(':')[1:])
-                if regex.search(u"\p{L}{2,}[\.?!…]\p{L}{2,}",sentence_in):
+                if re.search(u"\p{L}{2,}[\.?!…]\p{L}{2,}",sentence_in):
                     omit = True
                     print "omitted because of the dot!"
                     logger.info('Dot inside the word problem with sentence:\n____'+sentence_in)
@@ -274,7 +274,7 @@ while True:
                     sentence_out += word.upper() + ' '
                 i += 1
             if not omit:
-                sentence_out = regex.sub(u"[^\p{L}. *'-]","",sentence_out)
+                sentence_out = re.sub(u"[^\p{L}. *'-]","",sentence_out)
                 #if lang == 'ru' and year == True:
                 #    sentence_out = regex.sub(u" г\.| Г\.",u" ГОДУ|ГОД|ГОДА|ГОДОМ|ГОДЕ",sentence_out)
                 #    sentence_out = regex.sub(u" гг\.| ГГ\.",u" ГОДЫ|ГОДОВ|ЛЕТ|ГОДАМ|ГОДАХ|ГОДАМИ",sentence_out)
