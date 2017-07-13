@@ -1,3 +1,27 @@
+A text-normalization toolkit for Chinese
+================================
+
+Want a text normalizing for Chinese texts? Here it is!
+
+Forked from https://github.com/soshial/text-normalization which is too out of dated.
+
+Typical features of modes:
+------------------
+- Support Chinese now.
+- Replaced old numword with [num2words](https://github.com/savoirfairelinux/num2words), which had better support with more and more languages.
+- update `num_base.py` and add `num_zh` to work with new added num2words.
+- Remove dependency of regx, nltk and MySQL, you can run `normalization.py` which is easier to setup
+
+Any problem, feel free to contact me ^_^
+
+
+
+
+
+
+The original README is kept just as it was:
+------------------
+
 This library is used for normalizing ru/en texts, according to http://en.wikipedia.org/wiki/Text_normalization
 Best suites  for Text-to-Speech text normalizing.
 
